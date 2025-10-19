@@ -68,9 +68,13 @@ Exemplo de parâmetro:
   {
     "ParameterKey": "ValidarSolicitacaoFunctionArn",
     "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ValidarSolicitacao"
+  },
+  {
+    "ParameterKey": "ChecarSaldoFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ChecarSaldo"
   }
+  // Adicione os demais parâmetros conforme necessário
 ]
-
 ```
 
 ## 2. Implantar Stack via Script
