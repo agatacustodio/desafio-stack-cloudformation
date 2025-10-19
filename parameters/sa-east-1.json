@@ -1,1 +1,38 @@
-
+[
+  {
+    "ParameterKey": "ValidarSolicitacaoFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ValidarSolicitacao"
+  },
+  {
+    "ParameterKey": "ChecarSaldoFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ChecarSaldo"
+  },
+  {
+    "ParameterKey": "DeduzirSaldoFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:DeduzirSaldo"
+  },
+  {
+    "ParameterKey": "ExecutarPixFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ExecutarPix"
+  },
+  {
+    "ParameterKey": "EstornarSaldoFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:EstornarSaldo"
+  },
+  {
+    "ParameterKey": "NotificarClienteFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:NotificarCliente"
+  },
+  {
+    "ParameterKey": "RegistrarFalhaFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:RegistrarFalha"
+  },
+  {
+    "ParameterKey": "RegistrarTransacaoFunctionArn",
+    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:RegistrarTransacao"
+  },
+  {
+    "ParameterKey": "StateMachineRoleArn",
+    "ParameterValue": "arn:aws:iam::123456789012:role/StepFunctionExecutionRole"
+  }
+]
