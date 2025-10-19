@@ -33,13 +33,13 @@ A stack provisiona uma State Machine (Step Functions) com as seguintes etapas, c
 1. `ValidarSolicitacao`: Valida a solicitação do Pix.
 2. `ChecarSaldo`: Verifica o saldo da conta de origem.
 3. `TemSaldo`? (Condicional):
-Sim → `DeduzirSaldo`
-Não/Falha → `RegistrarFalha`
+- Sim → `DeduzirSaldo`
+- Não/Falha → `RegistrarFalha`
 4. `DeduzirSaldo`: Reserva ou debita o saldo.
 5. `ExecutarPix`: Chama API de execução do Pix.
 6. `ErroNaAPIPix?` (Condicional):
-Sim → `EstornarSaldo`
-Não → `NotificarCliente`
+- Sim → `EstornarSaldo`
+- Não → `NotificarCliente`
 7. `EstornarSaldo`: Reverte o débito em caso de erro.
 8. `NotificarCliente`: Envia notificação de sucesso.
 9. `RegistrarFalha`: Loga falhas de qualquer etapa.
@@ -68,16 +68,17 @@ Exemplo de parâmetro:
   {
     "ParameterKey": "ValidarSolicitacaoFunctionArn",
     "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ValidarSolicitacao"
-  },
-  ...
+  }
 ]
 
+```
 
 ## 2. Implantar Stack via Script
 
 Execute o script de deploy:
 
-```bash chmod +x scripts/deploy.sh
+```bash
+chmod +x scripts/deploy.sh
 ./scripts/deploy.sh
 ```
 
@@ -91,3 +92,11 @@ Esse script irá:
 - Customizar a lógica de negócios dentro das funções Lambda
 - Adicionar monitoramento (CloudWatch Logs, Alarms)
 - Automatizar testes com AWS SAM ou LocalStack
+
+## Repositório Relacionado
+
+Este repositório é parte de uma solução completa para o fluxo de Cash Out via Pix.
+
+Para ver a documentação detalhada do **workflow automatizado (State Machine)** e entender cada etapa lógica da orquestração, acesse:
+
+👉 [Workflow Automatizado - Cash Out via Pix](https://github.com/agatacustodio/desafio-cloudformation.git)
