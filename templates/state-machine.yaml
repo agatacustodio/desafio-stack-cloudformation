@@ -1,1 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  State Machine - Cash Out via Pix usando AWS Step Functions e funções Lambda externas.
 
+Parameters:
+  ValidarSolicitacaoFunctionArn:
+    Type: String
+  ChecarSaldoFunctionArn:
+    Type: String
+  DeduzirSaldoFunctionArn:
+    Type: String
+  ExecutarPixFunctionArn:
+    Type: String
+  EstornarSaldoFunctionArn:
+    Type: String
+  NotificarClienteFunctionArn:
+    Type: String
+  RegistrarFalhaFunctionArn:
+    Type: String
+  RegistrarTransacaoFunctionArn:
+    Type: String
+  StateMachineRoleArn:
+    Type: String
+
+Resources:
+  CashOutStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: !Ref StateMachineRoleArn
+      StateMachineName: CashOutViaPix
+      DefinitionString:
+        Fn::Sub: |
+          {
+            "StartAt": "ValidarSolicitacao",
+            "States": {
+              "ValidarSolicitacao": {
+                "Type": "Task",
+                "Resource": "${ValidarSolicitacaoFunctionArn}",
+                "Next": "ChecarSaldo"
+              },
+              "ChecarSaldo": {
+                "Type": "Task",
+                "Resource": "${ChecarSaldoFunctionArn}",
+                "Next": "TemSaldo?"
+              },
+              "TemSaldo?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Var
