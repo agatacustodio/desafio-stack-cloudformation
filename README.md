@@ -15,7 +15,7 @@ A stack define uma **State Machine (Máquina de Estados)** que gerencia todo o f
 ├── templates/
 │   └── state-machine.yaml         # Template principal da Stack (Step Functions)
 ├── parameters/
-│   └── sa-east-1.json             # Arquivo de parâmetros com ARNs das Lambdas
+│   └── sa-east-1.json             # Arquivo de parâmetros com ARNs das Lambdas (Região São Paulo)
 ├── scripts/
 │   └── deploy.sh                  # Script de deploy automatizado via AWS CLI
 └── README.md
@@ -90,6 +90,20 @@ Esse script irá:
 - Validar os parâmetros
 - Executar o `aws cloudformation deploy`
 - Exibir a saída da stack
+
+```bash
+# Conteúdo esperado do deploy.sh (exemplo)
+# STACK_NAME="PixCashOutStack"
+# REGION="sa-east-1"
+#
+# aws cloudformation deploy \
+#     --template-file templates/state-machine.yaml \
+#     --stack-name $STACK_NAME \
+#     --parameter-overrides $(cat parameters/$REGION.json | jq -r 'map("\(.ParameterKey)=\(.ParameterValue)") | join(" ")') \
+#     --capabilities CAPABILITY_IAM \
+#     --region $REGION
+```
+
 
 ## Próximos Passos
 - Criar as funções Lambda necessárias (se ainda não existirem)
