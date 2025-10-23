@@ -1,53 +1,12 @@
 # Implementação de Stack AWS CloudFormation - Cash Out via Pix
 
-Este repositório contém a definição e automação da **implantação de uma stack AWS CloudFormation**, responsável por orquestrar o fluxo de uma transação financeira de **Cash Out via Pix** usando **AWS Step Functions** e **AWS Lambda**.
+Este repositório contém a definição e automação da **implantação de uma Stack AWS CloudFormation**, responsável por orquestrar o fluxo de uma transação financeira de **Cash Out via Pix** usando **AWS Step Functions** e **AWS Lambda**.
 
-## Visão Geral
+## O que é uma Stack AWS CloudFormation?
 
-A stack define uma **State Machine (Máquina de Estados)** que gerencia todo o fluxo de uma transação Pix, incluindo validação, checagem de saldo, execução e tratamento de falhas. O modelo está escrito em **YAML** usando **CloudFormation** para provisionar a infraestrutura necessária.
-
----
-
-## Estrutura do Repositório
-
-```bash
-.
-├── templates/
-│   └── state-machine.yaml         # Template principal da Stack (Step Functions)
-├── parameters/
-│   └── sa-east-1.json             # Arquivo de parâmetros com ARNs das Lambdas (Região São Paulo)
-├── scripts/
-│   └── deploy.sh                  # Script de deploy automatizado via AWS CLI
-└── README.md
-
-```
-
-## O que é o AWS CloudFormation?
-O AWS CloudFormation é um serviço da AWS que permite definir e provisionar a infraestrutura da nuvem por meio de arquivos de modelo em YAML ou JSON. Isso garante automação, versionamento e reprodutibilidade de ambientes.
+Uma Stack AWS CloudFormation é um conjunto de recursos da AWS que são gerenciados como uma única unidade, baseada em um template. Esse template, escrito em JSON ou YAML, descreve os recursos e suas dependências, como instâncias EC2, bancos de dados RDS e redes VPC. O CloudFormation usa o template para criar, atualizar e excluir todos os recursos da stack de forma consistente e automatizada. 
 
 ---
-
-## Arquitetura da Stack
-A stack provisiona uma State Machine (Step Functions) com as seguintes etapas, cada uma representando uma fase do fluxo de transação:
-
-1. `ValidarSolicitacao`: Valida a solicitação do Pix.
-2. `ChecarSaldo`: Verifica o saldo da conta de origem.
-3. `TemSaldo`? (Condicional):
-- Sim → `DeduzirSaldo`
-- Não/Falha → `RegistrarFalha`
-4. `DeduzirSaldo`: Reserva ou debita o saldo.
-5. `ExecutarPix`: Chama API de execução do Pix.
-6. `ErroNaAPIPix?` (Condicional):
-- Sim → `EstornarSaldo`
-- Não → `NotificarCliente`
-7. `EstornarSaldo`: Reverte o débito em caso de erro.
-8. `NotificarCliente`: Envia notificação de sucesso.
-9. `RegistrarFalha`: Loga falhas de qualquer etapa.
-10. `RegistrarTransacao`: Registra o status final da transação.
-
-⚙️ Nota: As funções Lambda e a Role de execução da Step Function devem ser criadas previamente. Este stack assume que os ARNs dessas funções estão disponíveis e serão passados via parâmetros.
-
-___
 
 ## Implantação da Stack
 ### Pré-requisitos
@@ -58,58 +17,31 @@ ___
 
 ---
 
-## 1. Configurar Parâmetros
-Abra o arquivo `parameters/sa-east-1.json` e substitua os valores `<SEU_ID_DE_CONTA>` pelos ARNs reais das funções Lambda e Role IAM.
+## Stack Implementada
+A Stack definida no arquivo `cloudformation-template.yaml` cria um fluxo de trabalho orquestrado para a funcionalidade de *Cash Out via Pix*, o qual inclui validação, checagem de saldo, execução e tratamento de falhas. O modelo está escrito em **YAML** usando **CloudFormation** para provisionar a infraestrutura necessária.
 
-Exemplo de parâmetro:
+## Serviço Principal
+- AWS Step Functions: Criação da State Machine chamada `CashOutViaPix`.
 
-```json
-[
-  {
-    "ParameterKey": "ValidarSolicitacaoFunctionArn",
-    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ValidarSolicitacao"
-  },
-  {
-    "ParameterKey": "ChecarSaldoFunctionArn",
-    "ParameterValue": "arn:aws:lambda:sa-east-1:123456789012:function:ChecarSaldo"
-  }
-  // Adicione os demais parâmetros conforme necessário
-]
-```
+## Arquitetura da Stack
+A State Machine orquestra uma série de passos de processamento, incluindo lógica de decisão e tratamento de falhas, conforme o diagrama de fluxo (baseado na definição em YAML):
 
-## 2. Implantar Stack via Script
+| Estado | Tipo | Ação/Recurso (Lambda) | Lógica |
+|--------|------|-----------------------|--------|
+| StartAt: `ValidarSolicitacao` | `Task` | `${ValidarSolicitacaoFunctionArn}` | Inicia o fluxo. |
+| `ChecarSaldo` | `Task` | `${ChecarSaldoFunctionArn}` | - |
+| `TemSaldo?` | `Choice` | - | Decisão: Se tiver saldo, vai para `DeduzirSaldo`. Senão, vai para `RegistrarFalha`. |
+| `DeduzirSaldo` | `Task` | `${DeduzirSaldoFunctionArn}` | - |
+| `ExecutarPix` | `Task` | `${ExecutarPixFunctionArn}` | Tratamento de Falhas: Em caso de falha, captura o erro (`States.TaskFailed`) e vai para `EstornarSaldo`. |
+| `EstornarSaldo` | `Task` | `${EstornarSaldoFunctionArn}` | Chamado apenas se o `ExecutarPix` falhar. |
+| `NotificarCliente`, | `Task` | `${NotificarClienteFunctionArn}` | Chamado após o sucesso do `ExecutarPix`. |
+| `RegistrarTransacao` | `Task` | `${RegistrarTransacaoFunctionArn}` | Chamado após o sucesso do `NotificarCliente`. |
+| Sucesso: `Sucesso` | `Succeed` | - | Fim do fluxo de sucesso. |
+| `FalhaNoPix` | `Task` | `${RegistrarFalhaFunctionArn}` | Chamado após o `EstornarSaldo`. |
+| `RegistrarFalha` | `Task` | `${RegistrarFalhaFunctionArn}` | Chamado pelo Choice (`TemSaldo?`) quando não há saldo. |
+| Falha: `Falha` | `Fail` | - | Fim do fluxo de falha. |
 
-Execute o script de deploy:
-
-```bash
-chmod +x scripts/deploy.sh
-./scripts/deploy.sh
-```
-
-Esse script irá:
-- Validar os parâmetros
-- Executar o `aws cloudformation deploy`
-- Exibir a saída da stack
-
-```bash
-# Conteúdo esperado do deploy.sh (exemplo)
-# STACK_NAME="PixCashOutStack"
-# REGION="sa-east-1"
-#
-# aws cloudformation deploy \
-#     --template-file templates/state-machine.yaml \
-#     --stack-name $STACK_NAME \
-#     --parameter-overrides $(cat parameters/$REGION.json | jq -r 'map("\(.ParameterKey)=\(.ParameterValue)") | join(" ")') \
-#     --capabilities CAPABILITY_IAM \
-#     --region $REGION
-```
-
-
-## Próximos Passos
-- Criar as funções Lambda necessárias (se ainda não existirem)
-- Customizar a lógica de negócios dentro das funções Lambda
-- Adicionar monitoramento (CloudWatch Logs, Alarms)
-- Automatizar testes com AWS SAM ou LocalStack
+---
 
 ## Repositório Relacionado
 
